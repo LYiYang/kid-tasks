@@ -1,0 +1,160 @@
+.settings-card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  font-size: 0.95rem;
+}
+
+.settings-row + .settings-row {
+  border-top: 1px solid #f3f4f6;
+}
+
+.settings-row span:last-child {
+  font-weight: 700;
+  color: #ec4899;
+}
+
+.settings-section {
+  margin-top: 16px;
+  width: 100%;
+}
+
+.settings-section-title,
+.settings-danger-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 10px;
+}
+
+.settings-term-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.settings-term-row label {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.settings-term-row input {
+  padding: 10px 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 0.9rem;
+}
+
+.settings-save-btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  background: #ec4899;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.settings-save-btn:hover {
+  background: #db2777;
+}
+
+.settings-danger-btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.settings-danger-btn:hover {
+  background: #dc2626;
+}
+
+.settings-danger {
+  margin-top: 16px;
+  width: 100%;
+}
+
+.settings-reset-btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.settings-reset-btn:hover {
+  background: #dc2626;
+}
+
+.settings-hint {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
+.log-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.log-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f9fafb;
+}
+
+.log-type {
+  flex-shrink: 0;
+  font-size: 1rem;
+}
+
+.log-text {
+  flex: 1;
+  font-size: 0.88rem;
+  color: #374151;
+  line-height: 1.5;
+}
+
+.log-task {
+  color: #ec4899;
+  font-weight: 600;
+}
+
+.log-time {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  color: #9ca3af;
+}

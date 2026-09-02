@@ -1,0 +1,290 @@
+.week-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.week-progress {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #ec4899;
+}
+
+.week-owner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.week-owner select {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  background: #fff;
+}
+
+.week-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.week-nav-btn {
+  width: 34px;
+  height: 34px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+  color: #6b7280;
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.week-nav-btn:hover {
+  background: #fafafa;
+}
+
+.week-range {
+  flex: 1;
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.week-today-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 18px;
+  background: #ec4899;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  width: 100%;
+  margin-top: 16px;
+}
+
+.day-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 180px;
+  padding: 8px;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.day-col-today {
+  border: 2px solid #ec4899;
+  background: #fff7fa;
+}
+
+.day-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.day-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #6b7280;
+}
+
+.day-num {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #111827;
+}
+
+.day-col-today .day-num {
+  color: #ec4899;
+}
+
+.day-tasks {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.day-period {
+  border-radius: 10px;
+  border: 2px solid #e5e7eb;
+  padding: 6px;
+  background: #fff;
+}
+
+.day-period-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #6b7280;
+  margin-bottom: 6px;
+}
+
+.day-period-count {
+  padding: 1px 7px;
+  border-radius: 10px;
+  background: #f3f4f6;
+  font-size: 0.7rem;
+}
+
+.day-period-morning {
+  border-color: #fbbf24;
+  background: #fffbeb;
+}
+
+.day-period-morning .day-period-head {
+  color: #b45309;
+}
+
+.day-period-morning .day-period-count {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.day-period-afternoon {
+  border-color: #38bdf8;
+  background: #f0f9ff;
+}
+
+.day-period-afternoon .day-period-head {
+  color: #0369a1;
+}
+
+.day-period-afternoon .day-period-count {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.day-period-evening {
+  border-color: #a78bfa;
+  background: #f5f3ff;
+}
+
+.day-period-evening .day-period-head {
+  color: #6d28d9;
+}
+
+.day-period-evening .day-period-count {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
+.day-period-other {
+  border-color: #d1d5db;
+}
+
+.day-period-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  list-style: none;
+}
+
+.day-task {
+  padding: 6px 8px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.day-task-done {
+  opacity: 0.55;
+}
+
+.day-task-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.day-task-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border: 1.5px solid #ec4899;
+  border-radius: 50%;
+  background: #fff;
+  color: #fff;
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.day-task-done .day-task-check {
+  background: #ec4899;
+}
+
+.day-task-title {
+  flex: 1;
+  font-size: 0.82rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.day-task-done .day-task-title {
+  text-decoration: line-through;
+  color: #9ca3af;
+}
+
+.day-task-delete {
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  color: #d1d5db;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.day-task-delete:hover {
+  color: #ef4444;
+}
+
+.day-task-points {
+  display: block;
+  font-size: 0.72rem;
+  color: #ec4899;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.day-add input {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px dashed #d1d5db;
+  border-radius: 10px;
+  background: transparent;
+  font-size: 0.82rem;
+  color: #9ca3af;
+}
+
+.day-add input:focus {
+  outline: none;
+  border-color: #ec4899;
+}
