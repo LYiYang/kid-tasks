@@ -15,8 +15,7 @@ dist-ssr
 .env.*
 !.env.example
 
-# 打包产物（已误提交，后续移除）
-docs
+# 打包产物每次随代码提交，供 GitHub Pages 从 docs/ 发布
 
 # Editor directories and files
 .vscode/*

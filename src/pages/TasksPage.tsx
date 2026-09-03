@@ -20,7 +20,7 @@ const SCOPE_OPTIONS: { value: TaskScope; label: string }[] = [
 ];
 
 export function TasksPage() {
-  const { visibleTasks, addTask, toggleTask, deleteTask, term, members, isAdmin, activeMember } = useStore();
+  const { tasks, visibleTasks, addTask, toggleTask, deleteTask, term, members, isAdmin, activeMember } = useStore();
   const [title, setTitle] = useState('');
   const [points, setPoints] = useState(10);
   const [scope, setScope] = useState<TaskScope>('day');
@@ -31,8 +31,14 @@ export function TasksPage() {
 
   const kidMembers = members.filter((m) => m.role === 'kid');
 
+  const scopedTasks = isAdmin
+    ? ownerId
+      ? tasks.filter((t) => t.ownerId === ownerId)
+      : tasks
+    : visibleTasks;
+
   const handleToggle = (id: string) => {
-    const task = visibleTasks.find((t) => t.id === id);
+    const task = scopedTasks.find((t) => t.id === id);
     if (!task) return;
     if (!taskDoneOnDate(task.completedDates, task.planDate)) setCelebrating(true);
     toggleTask(id, task.planDate);
@@ -42,13 +48,13 @@ export function TasksPage() {
     e.preventDefault();
     if (!title.trim()) return;
     const resolvedEnd = scope === 'range' && endDate >= date ? endDate : undefined;
-    const owner = isAdmin ? ownerId : activeMember.id;
+    const owner = isAdmin ? ownerId || kidMembers[0]?.id : activeMember.id;
     addTask(title, points, date, scope, resolvedEnd, owner);
     setTitle('');
     setPoints(10);
   };
 
-  const doneCount = visibleTasks.filter((t) =>
+  const doneCount = scopedTasks.filter((t) =>
     taskDoneOnDate(t.completedDates, t.planDate),
   ).length;
   const scopeLabel =
@@ -66,7 +72,7 @@ export function TasksPage() {
       <div className="tasks-header">
         <h2 className="page-title">任务清单</h2>
         <span className="tasks-progress">
-          {doneCount}/{visibleTasks.length} 已完成
+          {doneCount}/{scopedTasks.length} 已完成
         </span>
       </div>
 
@@ -96,7 +102,7 @@ export function TasksPage() {
           <label className="task-owner">
             <span>负责人</span>
             <select value={ownerId} onChange={(e) => setOwnerId(e.target.value)}>
-              <option value="">选择宝宝...</option>
+              <option value="">全部成员</option>
               {kidMembers.map((m) => (
                 <option key={m.id} value={m.id}>
                   {m.name}
@@ -164,11 +170,11 @@ export function TasksPage() {
         </button>
       </form>
 
-      {visibleTasks.length === 0 ? (
+      {scopedTasks.length === 0 ? (
         <p className="tasks-empty">还没有任务，先添加一个吧～</p>
       ) : (
         <ul className="task-list">
-          {visibleTasks.map((task) => {
+          {scopedTasks.map((task) => {
             const done = taskDoneOnDate(task.completedDates, task.planDate);
             const owner = members.find((m) => m.id === task.ownerId);
             return (
