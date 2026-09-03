@@ -78,9 +78,7 @@ function migrateTask(task: Task): Task {
     ...task,
     scope,
     endDate,
-    completedDates: completedDates.filter(
-      (d) => d >= task.planDate && d <= endDate,
-    ),
+    completedDates,
     ownerId: task.ownerId ?? 'm-3',
     logs,
   };
@@ -179,15 +177,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const migratedTasks = useMemo(() => migrateTasks(tasks), [tasks]);
 
   useEffect(() => {
-    const kids = migratedMembers.filter((m) => m.role === 'kid');
-    const missing: Task[] = [];
-    const has = (ownerId: string, title: string) =>
-      migratedTasks.some((t) => t.ownerId === ownerId && t.title === title);
-    for (const kid of kids) {
+    setTasks((prev) => {
+      const migratedPrev = migrateTasks(prev);
+      const has = (ownerId: string, title: string) =>
+        migratedPrev.some((t) => t.ownerId === ownerId && t.title === title);
+
+      // 阳阳：确保拥有全部学期任务池（19 项）
+      const yangyang: Task[] = [];
       for (const item of TERM_TASKS) {
-        if (!has(kid.id, item.title)) {
-          missing.push({
-            id: `seed-${kid.id}-${item.title}`,
+        if (!has('m-3', item.title)) {
+          yangyang.push({
+            id: `seed-m-3-${item.title}`,
             title: item.title,
             points: 10,
             createdAt: Date.now(),
@@ -196,15 +196,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             scope: 'term' as TaskScope,
             period: item.period,
             completedDates: [],
-            ownerId: kid.id,
+            ownerId: 'm-3',
             logs: [],
           });
         }
       }
-      if (kid.name === '安安' && !has(kid.id, '玩游戏')) {
-        const weekStart = getWeekStart(todayString());
-        missing.push({
-          id: `seed-${kid.id}-玩游戏`,
+
+      // 安安：只保留「玩游戏」，清除其它误归的任务
+      const weekStart = getWeekStart(todayString());
+      const anan: Task[] = [];
+      if (!has('m-4', '玩游戏')) {
+        anan.push({
+          id: 'seed-m-4-玩游戏',
           title: '玩游戏',
           points: 10,
           createdAt: Date.now(),
@@ -213,15 +216,34 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           scope: 'week' as TaskScope,
           period: 'afternoon',
           completedDates: [],
-          ownerId: kid.id,
+          ownerId: 'm-4',
           logs: [],
         });
       }
-    }
-    if (missing.length > 0) {
-      setTasks((prev) => [...migrateTasks(prev), ...missing]);
-    }
-  }, [migratedMembers, migratedTasks, term, setTasks]);
+
+      const keptAnan = migratedPrev.filter(
+        (t) => t.ownerId !== 'm-4' || t.title === '玩游戏',
+      );
+      const keptOthers = migratedPrev.filter(
+        (t) => t.ownerId !== 'm-4' && t.ownerId !== 'm-3',
+      );
+      const keptYangyang = migratedPrev.filter(
+        (t) => t.ownerId === 'm-3',
+      );
+
+      // 幂等：若什么都没变则不重建
+      const next = [
+        ...keptOthers,
+        ...yangyang,
+        ...keptYangyang,
+        ...keptAnan,
+        ...anan,
+      ];
+      const nextKeys = next.map((t) => t.id).sort().join(',');
+      const prevKeys = prev.map((t) => t.id).sort().join(',');
+      return nextKeys === prevKeys ? prev : next;
+    });
+  }, [migratedMembers, term, setTasks]);
 
   const activeMember = useMemo(
     () =>
