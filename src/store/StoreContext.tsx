@@ -86,57 +86,9 @@ function migrateTask(task: Task): Task {
   };
 }
 
-function migrateTasks(
-  tasks: Task[],
-  members: Member[],
-  term: TermConfig,
-): Task[] {
+function migrateTasks(tasks: Task[]): Task[] {
   const migrated = tasks.map(migrateTask);
   const seen = new Set<string>();
-  const has = (ownerId: string, title: string) =>
-    migrated.some((t) => t.ownerId === ownerId && t.title === title);
-
-  const kids = members.filter((m) => m.role === 'kid');
-
-  // 给每个宝宝补学期任务池 + 安安的「玩游戏」每日重复任务
-  for (const kid of kids) {
-    for (const item of TERM_TASKS) {
-      if (!has(kid.id, item.title)) {
-        const t: Task = {
-          id: crypto.randomUUID(),
-          title: item.title,
-          points: 10,
-          createdAt: Date.now(),
-          planDate: term.start,
-          endDate: term.end,
-          scope: 'term' as TaskScope,
-          period: item.period,
-          completedDates: [],
-          ownerId: kid.id,
-          logs: [],
-        };
-        migrated.push(t);
-      }
-    }
-    if (kid.name === '安安' && !has(kid.id, '玩游戏')) {
-      const weekStart = getWeekStart(todayString());
-      const t: Task = {
-        id: crypto.randomUUID(),
-        title: '玩游戏',
-        points: 10,
-        createdAt: Date.now(),
-        planDate: weekStart,
-        endDate: scopeEndDate(weekStart, 'week', term.end),
-        scope: 'week' as TaskScope,
-        period: 'afternoon',
-        completedDates: [],
-        ownerId: kid.id,
-        logs: [],
-      };
-      migrated.push(t);
-    }
-  }
-
   const deduped: Task[] = [];
   for (const t of migrated) {
     const key = `${t.ownerId}|${t.planDate}|${t.title}`;
@@ -224,16 +176,52 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [parentUnlocked, setParentUnlocked] = useState(false);
 
   const migratedMembers = useMemo(() => migrateMembers(members), [members]);
-  const migratedTasks = useMemo(
-    () => migrateTasks(tasks, migratedMembers, term),
-    [tasks, migratedMembers, term],
-  );
+  const migratedTasks = useMemo(() => migrateTasks(tasks), [tasks]);
 
   useEffect(() => {
-    if (migratedTasks.length > tasks.length) {
-      setTasks(migratedTasks);
+    const kids = migratedMembers.filter((m) => m.role === 'kid');
+    const missing: Task[] = [];
+    const has = (ownerId: string, title: string) =>
+      migratedTasks.some((t) => t.ownerId === ownerId && t.title === title);
+    for (const kid of kids) {
+      for (const item of TERM_TASKS) {
+        if (!has(kid.id, item.title)) {
+          missing.push({
+            id: `seed-${kid.id}-${item.title}`,
+            title: item.title,
+            points: 10,
+            createdAt: Date.now(),
+            planDate: term.start,
+            endDate: term.end,
+            scope: 'term' as TaskScope,
+            period: item.period,
+            completedDates: [],
+            ownerId: kid.id,
+            logs: [],
+          });
+        }
+      }
+      if (kid.name === '安安' && !has(kid.id, '玩游戏')) {
+        const weekStart = getWeekStart(todayString());
+        missing.push({
+          id: `seed-${kid.id}-玩游戏`,
+          title: '玩游戏',
+          points: 10,
+          createdAt: Date.now(),
+          planDate: weekStart,
+          endDate: scopeEndDate(weekStart, 'week', term.end),
+          scope: 'week' as TaskScope,
+          period: 'afternoon',
+          completedDates: [],
+          ownerId: kid.id,
+          logs: [],
+        });
+      }
     }
-  }, [migratedTasks, tasks, setTasks]);
+    if (missing.length > 0) {
+      setTasks((prev) => [...migrateTasks(prev), ...missing]);
+    }
+  }, [migratedMembers, migratedTasks, term, setTasks]);
 
   const activeMember = useMemo(
     () =>
