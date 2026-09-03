@@ -17,7 +17,7 @@ const PERIOD_META: Record<TaskPeriod, { label: string; emoji: string }> = {
 const PERIOD_ORDER: TaskPeriod[] = ['morning', 'afternoon', 'evening', 'other'];
 
 export function WeekPage() {
-  const { visibleTasks, addTask, toggleTask, deleteTask, removeTaskFromDate, removeTaskFromWeekday, members, isAdmin, activeMember } = useStore();
+  const { tasks, visibleTasks, addTask, toggleTask, deleteTask, removeTaskFromDate, removeTaskFromWeekday, members, isAdmin, activeMember } = useStore();
   const today = todayString();
   const [weekStart, setWeekStart] = useState(() => getWeekStart(today));
   const [drafts, setDrafts] = useState<Record<string, string>>({});
@@ -27,8 +27,12 @@ export function WeekPage() {
 
   const kidMembers = members.filter((m) => m.role === 'kid');
 
+  const scopedTasks = isAdmin
+    ? tasks.filter((t) => t.ownerId === ownerId)
+    : visibleTasks;
+
   const handleToggle = (id: string, day: string) => {
-    const task = visibleTasks.find((t) => t.id === id);
+    const task = scopedTasks.find((t) => t.id === id);
     if (!task) return;
     if (!taskDoneOnDate(task.completedDates, day)) setCelebrating(true);
     toggleTask(id, day);
@@ -39,7 +43,7 @@ export function WeekPage() {
   const isCurrentWeek = today >= weekStart && today <= weekEnd;
 
   const tasksByDay = weekDays.map((day) =>
-    visibleTasks.filter((t) =>
+    scopedTasks.filter((t) =>
       taskVisibleOnDate(t.planDate, t.endDate, day, t.excludedDates, t.excludedWeekdays, t.scope),
     ),
   );
@@ -47,13 +51,13 @@ export function WeekPage() {
   const handleAdd = (day: string) => {
     const title = drafts[day]?.trim();
     if (!title) return;
-    const owner = isAdmin ? ownerId : activeMember.id;
+    const owner = isAdmin ? ownerId || kidMembers[0]?.id : activeMember.id;
     addTask(title, 10, day, undefined, undefined, owner);
     setDrafts((prev) => ({ ...prev, [day]: '' }));
   };
 
-  const total = visibleTasks.length;
-  const done = visibleTasks.filter((t) =>
+  const total = scopedTasks.length;
+  const done = scopedTasks.filter((t) =>
     taskDoneOnDate(t.completedDates, today),
   ).length;
 
@@ -69,9 +73,9 @@ export function WeekPage() {
 
       {isAdmin && (
         <label className="week-owner">
-          <span>负责人</span>
+          <span>查看负责人</span>
           <select value={ownerId} onChange={(e) => setOwnerId(e.target.value)}>
-            <option value="">选择宝宝...</option>
+            <option value="">全部成员</option>
             {kidMembers.map((m) => (
               <option key={m.id} value={m.id}>
                 {m.name}
