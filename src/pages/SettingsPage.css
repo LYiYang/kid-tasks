@@ -30,6 +30,54 @@
   width: 100%;
 }
 
+.family-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.family-input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 0.9rem;
+}
+
+.family-input:focus {
+  outline: none;
+  border-color: #ec4899;
+}
+
+.family-btn {
+  flex-shrink: 0;
+  padding: 10px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  color: #374151;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.family-btn-primary {
+  background: #ec4899;
+  border-color: #ec4899;
+  color: #fff;
+}
+
+.family-btn-primary:hover {
+  background: #db2777;
+}
+
+.family-msg {
+  margin-top: 8px;
+  color: #22c55e;
+}
+
 .settings-section-title,
 .settings-danger-title {
   font-size: 1rem;

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../store/useStore';
+import { getFamilyId, setFamilyId } from '../lib/family';
 import './SettingsPage.css';
 
 export function SettingsPage() {
@@ -8,6 +9,8 @@ export function SettingsPage() {
   const [termStart, setTermStart] = useState(term.start);
   const [termEnd, setTermEnd] = useState(term.end);
   const [scheduleMsg, setScheduleMsg] = useState('');
+  const [familyInput, setFamilyInput] = useState(getFamilyId());
+  const [familyMsg, setFamilyMsg] = useState('');
 
   const logs = visibleTasks
     .flatMap((t) =>
@@ -52,6 +55,25 @@ export function SettingsPage() {
     }
   };
 
+  const handleFamilyCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(familyInput.trim());
+      setFamilyMsg('家庭码已复制');
+    } catch {
+      setFamilyMsg('复制失败，请手动复制');
+    }
+  };
+
+  const handleFamilySave = () => {
+    if (familyInput.trim().length < 4) {
+      setFamilyMsg('家庭码至少 4 个字符');
+      return;
+    }
+    setFamilyId(familyInput);
+    setFamilyMsg('已切换家庭码，正在刷新…');
+    setTimeout(() => window.location.reload(), 600);
+  };
+
   return (
     <section className="page">
       <h2 className="page-title">设置</h2>
@@ -69,6 +91,29 @@ export function SettingsPage() {
           <span>当前积分</span>
           <span>{points}</span>
         </div>
+      </div>
+
+      <div className="settings-section">
+        <h3 className="settings-section-title">家庭共享码</h3>
+        <p className="settings-hint">
+          同一台设备会自动生成一个家庭码。家人的设备填入相同的码，就能看到同一份任务。
+        </p>
+        <div className="family-row">
+          <input
+            className="family-input"
+            type="text"
+            value={familyInput}
+            onChange={(e) => setFamilyInput(e.target.value)}
+            aria-label="家庭共享码"
+          />
+          <button className="family-btn" type="button" onClick={handleFamilyCopy}>
+            复制
+          </button>
+          <button className="family-btn family-btn-primary" type="button" onClick={handleFamilySave}>
+            切换
+          </button>
+        </div>
+        {familyMsg && <p className="settings-hint family-msg">{familyMsg}</p>}
       </div>
 
       {isAdmin && (

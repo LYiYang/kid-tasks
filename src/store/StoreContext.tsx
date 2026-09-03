@@ -153,25 +153,28 @@ const StoreContext = createContext<StoreContextValue | null>(null);
 export default StoreContext;
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const [tasks, setTasks] = usePersistentState<Task[]>(
+  const [tasks, setTasks, tasksReady] = usePersistentState<Task[]>(
     TASKS_KEY,
     makeDefaultTasks(),
   );
-  const [rewards, setRewards] = usePersistentState<Reward[]>(
+  const [rewards, setRewards, rewardsReady] = usePersistentState<Reward[]>(
     REWARDS_KEY,
     DEFAULT_REWARDS,
   );
-  const [term, setTerm] = usePersistentState<TermConfig>(TERM_KEY, DEFAULT_TERM);
-  const [members, setMembers] = usePersistentState<Member[]>(
+  const [term, setTerm, termReady] = usePersistentState<TermConfig>(TERM_KEY, DEFAULT_TERM);
+  const [members, setMembers, membersReady] = usePersistentState<Member[]>(
     MEMBERS_KEY,
     makeDefaultMembers(),
   );
-  const [activeMemberId, setActiveMemberId] = usePersistentState<string>(
+  const [activeMemberId, setActiveMemberId, activeReady] = usePersistentState<string>(
     ACTIVE_KEY,
     'm-3',
   );
-  const [earnedPoints, setEarnedPoints] = usePersistentState<number>(EARNED_KEY, 0);
+  const [earnedPoints, setEarnedPoints, pointsReady] = usePersistentState<number>(EARNED_KEY, 0);
   const [parentUnlocked, setParentUnlocked] = useState(false);
+
+  const allReady =
+    tasksReady && rewardsReady && termReady && membersReady && activeReady && pointsReady;
 
   const migratedMembers = useMemo(() => migrateMembers(members), [members]);
   const migratedTasks = useMemo(() => migrateTasks(tasks), [tasks]);
@@ -457,6 +460,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setEarnedPoints,
     ],
   );
+
+  if (!allReady) {
+    return null;
+  }
 
   return (
     <StoreContext.Provider value={value}>{children}</StoreContext.Provider>
