@@ -8,6 +8,7 @@ import type {
   Reward,
   Task,
   TaskEvent,
+  TaskPeriod,
   TaskScope,
   TermConfig,
 } from '../types';
@@ -129,7 +130,10 @@ interface StoreContextValue {
     scope?: TaskScope,
     endDate?: string,
     ownerId?: string,
+    period?: TaskPeriod,
+    weekdays?: number[],
   ) => void;
+  moveTask: (id: string, period: TaskPeriod, order: number) => void;
   toggleTask: (id: string, date: string) => void;
   deleteTask: (id: string) => void;
   removeTaskFromDate: (id: string, date: string) => void;
@@ -279,7 +283,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       activeMember,
       isAdmin,
       parentUnlocked,
-      addTask: (title, pts, planDate, scope = 'day', endDate, ownerId) => {
+      addTask: (title, pts, planDate, scope = 'day', endDate, ownerId, period, weekdays) => {
         const start = planDate ?? todayString();
         const task: Task = {
           id: crypto.randomUUID(),
@@ -292,8 +296,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           completedDates: [],
           ownerId: ownerId ?? activeMember.id,
           logs: [],
+          period,
+          weekdays,
+          order: 0,
         };
         setTasks((prev) => [...prev, task]);
+      },
+      moveTask: (id, period, order) => {
+        setTasks((prev) =>
+          prev.map((t) =>
+            t.id === id ? { ...t, period, order } : t,
+          ),
+        );
       },
       toggleTask: (id, date) => {
         const task = migratedTasks.find((t) => t.id === id);

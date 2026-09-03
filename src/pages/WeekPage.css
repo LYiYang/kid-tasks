@@ -74,6 +74,107 @@
   cursor: pointer;
 }
 
+.weekly-add {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin-top: 12px;
+}
+
+.weekly-add-toggle {
+  padding: 10px 14px;
+  border: 1px dashed #ec4899;
+  border-radius: 12px;
+  background: #fff7fa;
+  color: #ec4899;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.weekly-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid #f3e8f0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.weekly-input {
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 0.95rem;
+}
+
+.weekly-days {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.weekly-day {
+  width: 36px;
+  height: 36px;
+  border: 1px solid #e5e7eb;
+  border-radius: 50%;
+  background: #fff;
+  color: #6b7280;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.weekly-day-active {
+  border-color: #ec4899;
+  background: #fef3f7;
+  color: #ec4899;
+}
+
+.weekly-period {
+  display: flex;
+  gap: 8px;
+}
+
+.weekly-period-btn {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+  color: #6b7280;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.weekly-period-active {
+  border-color: #ec4899;
+  background: #fef3f7;
+  color: #ec4899;
+}
+
+.weekly-submit {
+  padding: 10px;
+  border: none;
+  border-radius: 12px;
+  background: #ec4899;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.weekly-submit:disabled {
+  background: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
 .week-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -213,6 +314,15 @@
 
 .day-task-done {
   opacity: 0.55;
+}
+
+.day-task-dragging {
+  opacity: 0.5;
+}
+
+.day-period-droppable {
+  min-height: 40px;
+  border-style: dashed;
 }
 
 .day-task-top {

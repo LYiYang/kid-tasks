@@ -15,6 +15,8 @@ export interface Task {
   logs: TaskEvent[];
   excludedDates?: string[];
   excludedWeekdays?: number[];
+  weekdays?: number[];
+  order?: number;
 }
 
 export interface Reward {

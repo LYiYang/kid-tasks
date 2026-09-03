@@ -17,13 +17,38 @@ const PERIOD_META: Record<TaskPeriod, { label: string; emoji: string }> = {
 const PERIOD_ORDER: TaskPeriod[] = ['morning', 'afternoon', 'evening', 'other'];
 
 export function WeekPage() {
-  const { tasks, visibleTasks, addTask, toggleTask, deleteTask, removeTaskFromDate, removeTaskFromWeekday, members, isAdmin, activeMember } = useStore();
+  const { tasks, visibleTasks, addTask, toggleTask, deleteTask, removeTaskFromDate, removeTaskFromWeekday, moveTask, members, isAdmin, activeMember } = useStore();
   const today = todayString();
   const [weekStart, setWeekStart] = useState(() => getWeekStart(today));
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [celebrating, setCelebrating] = useState(false);
   const [ownerId, setOwnerId] = useState(activeMember.id);
   const [deleteTarget, setDeleteTarget] = useState<{ task: Task; day: string } | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [weeklyOpen, setWeeklyOpen] = useState(false);
+  const [weeklyTitle, setWeeklyTitle] = useState('');
+  const [weeklyDays, setWeeklyDays] = useState<number[]>([]);
+  const [weeklyPeriod, setWeeklyPeriod] = useState<TaskPeriod>('afternoon');
+
+  const WEEKDAY_LABELS = ['日', '一', '二', '三', '四', '五', '六'];
+
+  const toggleWeeklyDay = (d: number) => {
+    setWeeklyDays((prev) =>
+      prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d],
+    );
+  };
+
+  const handleAddWeekly = () => {
+    const title = weeklyTitle.trim();
+    if (!title || weeklyDays.length === 0) return;
+    for (const d of weeklyDays) {
+      const planDate = addDays(weekStart, d === 0 ? 6 : d - 1);
+      addTask(title, 10, planDate, 'week', undefined, isAdmin ? ownerId || kidMembers[0]?.id : activeMember.id, weeklyPeriod, [d]);
+    }
+    setWeeklyTitle('');
+    setWeeklyDays([]);
+    setWeeklyOpen(false);
+  };
 
   const kidMembers = members.filter((m) => m.role === 'kid');
 
@@ -44,7 +69,7 @@ export function WeekPage() {
 
   const tasksByDay = weekDays.map((day) =>
     scopedTasks.filter((t) =>
-      taskVisibleOnDate(t.planDate, t.endDate, day, t.excludedDates, t.excludedWeekdays, t.scope),
+      taskVisibleOnDate(t.planDate, t.endDate, day, t.excludedDates, t.excludedWeekdays, t.scope, t.weekdays),
     ),
   );
 
@@ -116,6 +141,60 @@ export function WeekPage() {
         )}
       </div>
 
+      <div className="weekly-add">
+        <button
+          type="button"
+          className="weekly-add-toggle"
+          onClick={() => setWeeklyOpen((v) => !v)}
+        >
+          {weeklyOpen ? '收起每周任务' : '➕ 添加每周任务'}
+        </button>
+        {weeklyOpen && (
+          <div className="weekly-form">
+            <input
+              type="text"
+              className="weekly-input"
+              value={weeklyTitle}
+              onChange={(e) => setWeeklyTitle(e.target.value)}
+              placeholder="任务名称，如：每周六足球训练"
+              aria-label="每周任务名称"
+            />
+            <div className="weekly-days">
+              {WEEKDAY_LABELS.map((label, d) => (
+                <button
+                  key={d}
+                  type="button"
+                  className={`weekly-day${weeklyDays.includes(d) ? ' weekly-day-active' : ''}`}
+                  onClick={() => toggleWeeklyDay(d)}
+                >
+                  {d === 0 ? '日' : label}
+                </button>
+              ))}
+            </div>
+            <div className="weekly-period">
+              {PERIOD_ORDER.map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  className={`weekly-period-btn${weeklyPeriod === p ? ' weekly-period-active' : ''}`}
+                  onClick={() => setWeeklyPeriod(p)}
+                >
+                  {PERIOD_META[p].label}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              className="weekly-submit"
+              disabled={!weeklyTitle.trim() || weeklyDays.length === 0}
+              onClick={handleAddWeekly}
+            >
+              添加
+            </button>
+          </div>
+        )}
+      </div>
+
       <div className="week-grid">
         {weekDays.map((day, i) => {
           const dayTasks = tasksByDay[i];
@@ -131,13 +210,22 @@ export function WeekPage() {
 
               <div className="day-tasks">
                 {PERIOD_ORDER.map((period) => {
-                  const periodTasks = dayTasks.filter(
-                    (t) => (t.period ?? 'other') === period,
-                  );
-                  if (periodTasks.length === 0) return null;
+                  const periodTasks = dayTasks
+                    .filter((t) => (t.period ?? 'other') === period)
+                    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
                   const meta = PERIOD_META[period];
                   return (
-                    <div key={period} className={`day-period day-period-${period}`}>
+                    <div
+                      key={period}
+                      className={`day-period day-period-${period}${draggingId ? ' day-period-droppable' : ''}`}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        const id = e.dataTransfer.getData('text/task-id');
+                        if (id) moveTask(id, period, periodTasks.length);
+                        setDraggingId(null);
+                      }}
+                    >
                       <div className="day-period-head">
                         <span>{meta.emoji} {meta.label}</span>
                         <span className="day-period-count">{periodTasks.length}</span>
@@ -149,7 +237,14 @@ export function WeekPage() {
                           return (
                           <li
                             key={task.id}
-                            className={`day-task${taskDone ? ' day-task-done' : ''}`}
+                            className={`day-task${taskDone ? ' day-task-done' : ''}${draggingId === task.id ? ' day-task-dragging' : ''}`}
+                            draggable
+                            onDragStart={(e) => {
+                              e.dataTransfer.setData('text/task-id', task.id);
+                              e.dataTransfer.effectAllowed = 'move';
+                              setDraggingId(task.id);
+                            }}
+                            onDragEnd={() => setDraggingId(null)}
                           >
                             <div className="day-task-top">
                               <button

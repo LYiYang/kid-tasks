@@ -20,7 +20,7 @@ export function HomePage() {
     (acc, day) =>
       acc +
       visibleTasks.filter((t) =>
-        taskVisibleOnDate(t.planDate, t.endDate, day, t.excludedDates, t.excludedWeekdays, t.scope),
+        taskVisibleOnDate(t.planDate, t.endDate, day, t.excludedDates, t.excludedWeekdays, t.scope, t.weekdays),
       ).length,
     0,
   );
@@ -29,7 +29,7 @@ export function HomePage() {
       acc +
       visibleTasks.filter(
         (t) =>
-          taskVisibleOnDate(t.planDate, t.endDate, day, t.excludedDates, t.excludedWeekdays, t.scope) &&
+          taskVisibleOnDate(t.planDate, t.endDate, day, t.excludedDates, t.excludedWeekdays, t.scope, t.weekdays) &&
           taskDoneOnDate(t.completedDates, day),
       ).length,
     0,
@@ -149,11 +149,11 @@ export function HomePage() {
 }
 
 function weekTasksForDay(
-  tasks: { planDate: string; endDate?: string; completedDates: string[]; excludedDates?: string[]; excludedWeekdays?: number[]; scope?: string }[],
+  tasks: { planDate: string; endDate?: string; completedDates: string[]; excludedDates?: string[]; excludedWeekdays?: number[]; scope?: string; weekdays?: number[] }[],
   day: string,
 ) {
   return tasks.filter((t) =>
-    taskVisibleOnDate(t.planDate, t.endDate, day, t.excludedDates, t.excludedWeekdays, t.scope),
+    taskVisibleOnDate(t.planDate, t.endDate, day, t.excludedDates, t.excludedWeekdays, t.scope, t.weekdays),
   );
 }
 

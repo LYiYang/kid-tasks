@@ -90,8 +90,13 @@ export function taskVisibleOnDate(
   excludedDates?: string[],
   excludedWeekdays?: number[],
   scope?: string,
+  weekdays?: number[],
 ): boolean {
-  if (scope !== 'term' && !taskCoversDate(planStart, planEnd, date)) return false;
+  if (weekdays && weekdays.length > 0) {
+    if (!weekdays.includes(parseDate(date).getDay())) return false;
+  } else {
+    if (scope !== 'term' && !taskCoversDate(planStart, planEnd, date)) return false;
+  }
   if (excludedDates?.includes(date)) return false;
   if (excludedWeekdays?.includes(parseDate(date).getDay())) return false;
   return true;
