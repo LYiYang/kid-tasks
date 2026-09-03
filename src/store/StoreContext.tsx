@@ -1,6 +1,6 @@
-import { createContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { usePersistentState } from '../hooks/usePersistentState';
-import { todayString, scopeEndDate } from '../utils/date';
+import { todayString, scopeEndDate, getWeekStart } from '../utils/date';
 import { TERM_TASKS } from '../data/schedule';
 import type {
   Member,
@@ -36,7 +36,8 @@ function makeDefaultMembers(): Member[] {
   return [
     { id: 'm-1', name: '爸爸', avatar: '🐻', color: '#3b82f6', role: 'admin', parentPin: DEFAULT_PIN, createdAt: Date.now() },
     { id: 'm-2', name: '妈妈', avatar: '🐱', color: '#ec4899', role: 'admin', parentPin: DEFAULT_PIN, createdAt: Date.now() },
-    { id: 'm-3', name: '宝宝', avatar: '🐰', color: '#8b5cf6', role: 'kid', createdAt: Date.now() },
+    { id: 'm-3', name: '阳阳', avatar: '🐰', color: '#8b5cf6', role: 'kid', createdAt: Date.now() },
+    { id: 'm-4', name: '安安', avatar: '🐻‍❄️', color: '#f59e0b', role: 'kid', createdAt: Date.now() },
   ];
 }
 
@@ -85,9 +86,57 @@ function migrateTask(task: Task): Task {
   };
 }
 
-function migrateTasks(tasks: Task[]): Task[] {
+function migrateTasks(
+  tasks: Task[],
+  members: Member[],
+  term: TermConfig,
+): Task[] {
   const migrated = tasks.map(migrateTask);
   const seen = new Set<string>();
+  const has = (ownerId: string, title: string) =>
+    migrated.some((t) => t.ownerId === ownerId && t.title === title);
+
+  const kids = members.filter((m) => m.role === 'kid');
+
+  // 给每个宝宝补学期任务池 + 安安的「玩游戏」每日重复任务
+  for (const kid of kids) {
+    for (const item of TERM_TASKS) {
+      if (!has(kid.id, item.title)) {
+        const t: Task = {
+          id: crypto.randomUUID(),
+          title: item.title,
+          points: 10,
+          createdAt: Date.now(),
+          planDate: term.start,
+          endDate: term.end,
+          scope: 'term' as TaskScope,
+          period: item.period,
+          completedDates: [],
+          ownerId: kid.id,
+          logs: [],
+        };
+        migrated.push(t);
+      }
+    }
+    if (kid.name === '安安' && !has(kid.id, '玩游戏')) {
+      const weekStart = getWeekStart(todayString());
+      const t: Task = {
+        id: crypto.randomUUID(),
+        title: '玩游戏',
+        points: 10,
+        createdAt: Date.now(),
+        planDate: weekStart,
+        endDate: scopeEndDate(weekStart, 'week', term.end),
+        scope: 'week' as TaskScope,
+        period: 'afternoon',
+        completedDates: [],
+        ownerId: kid.id,
+        logs: [],
+      };
+      migrated.push(t);
+    }
+  }
+
   const deduped: Task[] = [];
   for (const t of migrated) {
     const key = `${t.ownerId}|${t.planDate}|${t.title}`;
@@ -99,11 +148,19 @@ function migrateTasks(tasks: Task[]): Task[] {
 }
 
 function migrateMembers(members: Member[]): Member[] {
-  return members.map((m) => ({
+  let result: Member[] = members.map((m) => ({
     ...m,
+    name: m.name === '宝宝' ? '阳阳' : m.name,
     role: m.role ?? 'kid',
     parentPin: m.role === 'admin' ? (m.parentPin ?? DEFAULT_PIN) : undefined,
   }));
+  if (!result.some((m) => m.name === '安安')) {
+    result = [
+      ...result,
+      { id: 'm-4', name: '安安', avatar: '🐻‍❄️', color: '#f59e0b', role: 'kid', parentPin: undefined, createdAt: Date.now() },
+    ];
+  }
+  return result;
 }
 
 interface StoreContextValue {
@@ -166,8 +223,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [earnedPoints, setEarnedPoints] = usePersistentState<number>(EARNED_KEY, 0);
   const [parentUnlocked, setParentUnlocked] = useState(false);
 
-  const migratedTasks = useMemo(() => migrateTasks(tasks), [tasks]);
   const migratedMembers = useMemo(() => migrateMembers(members), [members]);
+  const migratedTasks = useMemo(
+    () => migrateTasks(tasks, migratedMembers, term),
+    [tasks, migratedMembers, term],
+  );
+
+  useEffect(() => {
+    if (migratedTasks.length > tasks.length) {
+      setTasks(migratedTasks);
+    }
+  }, [migratedTasks, tasks, setTasks]);
 
   const activeMember = useMemo(
     () =>
@@ -265,6 +331,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setRewards((prev) => [...prev, reward]);
       },
       removeTaskFromDate: (id, date) => {
+        if (!isAdmin) return;
         setTasks((prev) =>
           prev.map((t) =>
             t.id === id
@@ -277,6 +344,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         );
       },
       removeTaskFromWeekday: (id, weekday) => {
+        if (!isAdmin) return;
         setTasks((prev) =>
           prev.map((t) =>
             t.id === id

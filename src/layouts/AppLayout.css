@@ -1,10 +1,11 @@
 .app-shell {
   display: grid;
   grid-template-rows: auto 1fr auto;
-  min-height: 100dvh;
+  height: 100dvh;
   max-width: 1100px;
   margin: 0 auto;
   background: #f9fafb;
+  overflow: hidden;
 }
 
 .app-header {
@@ -62,6 +63,7 @@
 .app-main {
   padding: 16px;
   overflow-y: auto;
+  min-height: 0;
 }
 
 .app-nav {
