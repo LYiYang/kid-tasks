@@ -4,10 +4,9 @@ import {
   getWeekStart,
   getWeekDays,
   todayString,
-  isWithinTerm,
   taskVisibleOnDate,
   taskDoneOnDate,
-  rangeOverlapDays,
+  visibleDaysInRange,
 } from '../utils/date';
 import './HomePage.css';
 
@@ -21,7 +20,7 @@ export function HomePage() {
     (acc, day) =>
       acc +
       visibleTasks.filter((t) =>
-        taskVisibleOnDate(t.planDate, t.endDate, day, t.excludedDates, t.excludedWeekdays),
+        taskVisibleOnDate(t.planDate, t.endDate, day, t.excludedDates, t.excludedWeekdays, t.scope),
       ).length,
     0,
   );
@@ -30,29 +29,25 @@ export function HomePage() {
       acc +
       visibleTasks.filter(
         (t) =>
-          taskVisibleOnDate(t.planDate, t.endDate, day, t.excludedDates, t.excludedWeekdays) &&
+          taskVisibleOnDate(t.planDate, t.endDate, day, t.excludedDates, t.excludedWeekdays, t.scope) &&
           taskDoneOnDate(t.completedDates, day),
       ).length,
     0,
   );
 
-  const termTasks = visibleTasks.filter((t) =>
-    isWithinTerm(t.planDate, term.start, term.end),
-  );
+  const termTasks = visibleTasks.filter((t) => t.scope === 'term');
   const termPlanned = termTasks.reduce(
-    (acc, t) => acc + rangeOverlapDays(t.planDate, t.endDate, term.start, term.end),
+    (acc, t) =>
+      acc + visibleDaysInRange(term.start, term.end, t.excludedDates, t.excludedWeekdays),
     0,
   );
   const termDone = termTasks.reduce(
-    (acc, t) =>
-      acc +
-      t.completedDates.filter(
-        (d) => isWithinTerm(d, term.start, term.end),
-      ).length,
+    (acc, t) => acc + t.completedDates.length,
     0,
   );
   const termPending = termTasks.filter((t) =>
-    t.completedDates.length < rangeOverlapDays(t.planDate, t.endDate, term.start, term.end),
+    t.completedDates.length <
+    visibleDaysInRange(term.start, term.end, t.excludedDates, t.excludedWeekdays),
   );
 
   const claimedRewards = rewards.filter((r) => r.claimed).length;
@@ -154,22 +149,30 @@ export function HomePage() {
 }
 
 function weekTasksForDay(
-  tasks: { planDate: string; endDate?: string; completedDates: string[]; excludedDates?: string[]; excludedWeekdays?: number[] }[],
+  tasks: { planDate: string; endDate?: string; completedDates: string[]; excludedDates?: string[]; excludedWeekdays?: number[]; scope?: string }[],
   day: string,
 ) {
   return tasks.filter((t) =>
-    taskVisibleOnDate(t.planDate, t.endDate, day, t.excludedDates, t.excludedWeekdays),
+    taskVisibleOnDate(t.planDate, t.endDate, day, t.excludedDates, t.excludedWeekdays, t.scope),
   );
 }
 
 function taskRemainingDays(
-  task: { planDate: string; endDate?: string; completedDates: string[] },
+  task: {
+    planDate: string;
+    endDate?: string;
+    completedDates: string[];
+    excludedDates?: string[];
+    excludedWeekdays?: number[];
+  },
   regionStart: string,
   regionEnd: string,
 ): number {
-  const overlap = rangeOverlapDays(task.planDate, task.endDate, regionStart, regionEnd);
-  const covered = task.completedDates.filter(
-    (d) => isWithinTerm(d, regionStart, regionEnd),
-  ).length;
-  return Math.max(0, overlap - covered);
+  const visible = visibleDaysInRange(
+    regionStart,
+    regionEnd,
+    task.excludedDates,
+    task.excludedWeekdays,
+  );
+  return Math.max(0, visible - task.completedDates.length);
 }

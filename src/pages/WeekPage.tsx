@@ -40,7 +40,7 @@ export function WeekPage() {
 
   const tasksByDay = weekDays.map((day) =>
     visibleTasks.filter((t) =>
-      taskVisibleOnDate(t.planDate, t.endDate, day, t.excludedDates, t.excludedWeekdays),
+      taskVisibleOnDate(t.planDate, t.endDate, day, t.excludedDates, t.excludedWeekdays, t.scope),
     ),
   );
 

@@ -89,8 +89,9 @@ export function taskVisibleOnDate(
   date: string,
   excludedDates?: string[],
   excludedWeekdays?: number[],
+  scope?: string,
 ): boolean {
-  if (!taskCoversDate(planStart, planEnd, date)) return false;
+  if (scope !== 'term' && !taskCoversDate(planStart, planEnd, date)) return false;
   if (excludedDates?.includes(date)) return false;
   if (excludedWeekdays?.includes(parseDate(date).getDay())) return false;
   return true;
@@ -109,4 +110,25 @@ export function rangeOverlapDays(
   const d = parseDate(overlapStart);
   const e = parseDate(overlapEnd);
   return Math.round((e.getTime() - d.getTime()) / 86400000) + 1;
+}
+
+export function visibleDaysInRange(
+  rangeStart: string,
+  rangeEnd: string,
+  excludedDates?: string[],
+  excludedWeekdays?: number[],
+): number {
+  const start = parseDate(rangeStart);
+  const end = parseDate(rangeEnd);
+  const days = Math.round((end.getTime() - start.getTime()) / 86400000) + 1;
+  let visible = 0;
+  for (let i = 0; i < days; i++) {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    const ds = toDateString(d);
+    if (excludedDates?.includes(ds)) continue;
+    if (excludedWeekdays?.includes(d.getDay())) continue;
+    visible++;
+  }
+  return visible;
 }
